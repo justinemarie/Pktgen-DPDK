@@ -951,7 +951,7 @@ pktgen_packet_classify( struct rte_mbuf * m, int pid )
 
 /**************************************************************************//**
 *
-* pktgen_packet_classify_buld - Classify a set of packets in one call.
+* pktgen_packet_classify_bulk - Classify a set of packets in one call.
 *
 * DESCRIPTION
 * Classify a list of packets and to improve classify performance.
