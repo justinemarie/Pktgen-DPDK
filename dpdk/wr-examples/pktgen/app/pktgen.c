@@ -3963,9 +3963,17 @@ main(int argc, char **argv)
     rte_eal_mp_wait_lcore();
 
 #ifdef LOG_TIMESTAMPS
-    for(i = 0; i < HISTO_BUCKETS; i++){
-        printf("%d0us: %" PRId64 "\n", i, (unsigned long)pktgen.latency_histo[i]);
+    FILE *f = fopen("pktgen-latency.txt", "w");
+    if (f == NULL)
+    {
+            printf("Error opening file for latency log!\n");
+                exit(1);
     }
+
+    for(i = 0; i < HISTO_BUCKETS; i++){
+        fprintf(f, "%d0us: %" PRId64 "\n", i, (unsigned long)pktgen.latency_histo[i]);
+    }
+    fclose(f);
 #endif
     return 0;
 
