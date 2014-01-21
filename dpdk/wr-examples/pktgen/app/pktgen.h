@@ -147,6 +147,8 @@
 #include <wr_lscpu.h>
 #include <wr_utils.h>
 
+#define LOG_TIMESTAMPS
+
 #undef BPF_MAJOR_VERSION
 #include <pcap/pcap.h>
 
@@ -466,6 +468,13 @@ typedef struct pktgen_s {
 	uint16_t				portNum;			/**< Current Port number */
 	uint16_t				port_cnt;			/**< Number of ports used in total */
 	uint64_t				hz;					/**< Number of events per seconds */
+
+#ifdef LOG_TIMESTAMPS
+#define HISTO_BUCKETS 10000
+    uint64_t latency_histo[HISTO_BUCKETS];
+#endif
+
+
 
 	int						(*callout)(void * callout_arg);
 	void				  * callout_arg;
