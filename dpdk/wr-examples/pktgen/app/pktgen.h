@@ -246,7 +246,7 @@ enum {
 	EXTRA_TX_PKT			= (RANGE_PKT + 1),						// 19
 	NUM_TOTAL_PKTS			= (EXTRA_TX_PKT + NUM_EXTRA_TX_PKTS),
 
-	DEFAULT_PKT_BURST		= 16,		// Increasing this number consumes memory very fast
+	DEFAULT_PKT_BURST		= 64,		// Increasing this number consumes memory very fast
 	DEFAULT_RX_DESC			= (DEFAULT_PKT_BURST * 16),
 	DEFAULT_TX_DESC			= DEFAULT_RX_DESC,
 	MAX_MBUFS_PER_PORT		= (DEFAULT_TX_DESC * 8),	// number of buffers to support per port
