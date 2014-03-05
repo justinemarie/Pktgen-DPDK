@@ -148,6 +148,7 @@
 #include <wr_utils.h>
 
 #define LOG_TIMESTAMPS
+#define LATENCY_TIMELINE
 
 #undef BPF_MAJOR_VERSION
 #include <pcap/pcap.h>
@@ -474,6 +475,12 @@ typedef struct pktgen_s {
     uint64_t latency_histo[HISTO_BUCKETS];
 #endif
 
+#ifdef LATENCY_TIMELINE
+#define PACKETCOUNTS 100000
+    uint64_t packet_latency[PACKETCOUNTS];
+    uint64_t packet_timestep[PACKETCOUNTS];
+    uint32_t packet_idx;
+#endif
 
 
 	int						(*callout)(void * callout_arg);

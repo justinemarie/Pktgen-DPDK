@@ -344,7 +344,7 @@ pktgen_send_burst(port_info_t * info, uint8_t qid)
     if ( (cnt = mtab->len) == 0 )
         return;
 
-#ifdef LOG_TIMESTAMPS
+#if defined(LOG_TIMESTAMPS) || defined(LATENCY_TIMELINE)
     uint64_t time = rte_rdtsc();
 
     uint64_t inc = sizeof(struct ether_hdr) + sizeof(ipHdr_t) + sizeof(tcpHdr_t);
@@ -702,7 +702,7 @@ pktgen_packet_ctor(port_info_t * info, int32_t seq_idx, int32_t type) {
             pkt->tlen = pkt->ether_hdr_size + sizeof(ipHdr_t) + sizeof(tcpHdr_t);
 
 
-#ifdef LOG_TIMESTAMPS
+#if defined(LOG_TIMESTAMPS) || defined(LATENCY_TIMELINE)
             //justine@eecs.berkeley.edu 16 Jan 2014
             pkt->hdr.u.pad[5] = 0;
 #endif
@@ -920,7 +920,7 @@ pktgen_packet_classify( struct rte_mbuf * m, int pid )
 
 
 
-#ifdef LOG_TIMESTAMPS
+#if defined(LOG_TIMESTAMPS) || defined(LATENCY_TIMELINE)
     //justine@eecs.berkeley.edu -- 1/17/2014
     
     uint64_t cts = rte_rdtsc();
@@ -939,9 +939,19 @@ pktgen_packet_classify( struct rte_mbuf * m, int pid )
                 //Ticks / Ticks per Microsecond
                 uint64_t delta = (cts_32 - ts_32) / (rte_get_tsc_hz() / 1000 / 1000);
                 
-                if(cts_32 > ts_32){ //Do this check just incase wraps over max digit 
+                if(cts_32 > ts_32){ //Do this check just incase wraps over max digit
+
+#ifdef LOG_TIMESTAMPS
                     if(delta > (HISTO_BUCKETS * 10)) pktgen.latency_histo[HISTO_BUCKETS - 1]++;
                     else pktgen.latency_histo[delta / 10]++;
+#endif
+#ifdef LATENCY_TIMELINE
+                    if(pktgen.packet_idx < PACKETCOUNTS){
+                      pktgen.packet_latency[pktgen.packet_idx] = delta;
+                      pktgen.packet_timestep[pktgen.packet_idx] = cts;
+                      pktgen.packet_idx++;
+                    }
+#endif
                 }
 
             }
@@ -3867,8 +3877,16 @@ main(int argc, char **argv)
     pktgen.prompt			= "pktgen> ";
 
 #ifdef LOG_TIMESTAMPS
-    memset(pktgen.latency_histo, 0, 10);
+    memset(pktgen.latency_histo, 0, 8 * HISTO_BUCKETS);
 #endif 
+
+#ifdef LATENCY_TIMELINE
+    memset(pktgen.packet_latency, 0, 8 * PACKETCOUNTS);
+    memset(pktgen.packet_timestep, 0, 8 * PACKETCOUNTS);
+    pktgen.packet_idx = 0;
+#endif
+
+
 
     if ( (pktgen.l2p = wr_l2p_create()) == NULL )
         rte_panic("Unable to create l2p\n");
@@ -3975,6 +3993,23 @@ main(int argc, char **argv)
     }
     fclose(f);
 #endif
+#ifdef LATENCY_TIMELINE
+    FILE *g = fopen("pktgen-timeline.txt", "w");
+    if (g == NULL)
+    {
+            printf("Error opening file for latency log!\n");
+                exit(1);
+    }
+
+    for(i = 0; i < PACKETCOUNTS; i++){
+        fprintf(g, "%" PRId64 ": %" PRId64 "\n", (unsigned long) pktgen.packet_timestep[i], (unsigned long)pktgen.packet_latency[i]);
+    }
+    fclose(g);
+#endif
+
+
+
+
     return 0;
 
 }
